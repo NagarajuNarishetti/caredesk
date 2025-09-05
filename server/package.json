@@ -6,8 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon index.js",
-    "start": "node index.js",
-    "worker": "node worker.js"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
@@ -25,14 +24,10 @@
     "keycloak-connect": "^26.1.1",
     "mammoth": "^1.10.0",
     "minio": "^8.0.5",
-    "mongoose": "^8.17.1",
     "multer": "^2.0.2",
     "pg": "^8.16.3",
     "socket.io": "^4.8.1",
     "uuid": "^9.0.1",
-    "ws": "^8.18.3",
-    "y-websocket": "^1.5.4",
-    "yjs": "^13.6.27"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

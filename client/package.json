@@ -10,19 +10,11 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.0.0",
-    "@tiptap/extension-collaboration": "^2.26.1",
-    "@tiptap/extension-collaboration-cursor": "^2.26.1",
-    "@tiptap/pm": "^2.26.1",
-    "@tiptap/react": "^2.26.1",
-    "@tiptap/starter-kit": "^2.26.1",
     "axios": "^1.11.0",
     "keycloak-js": "^26.2.0",
     "next": "15.4.6",
     "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "socket.io-client": "^4.8.1",
-    "y-websocket": "^1.5.4",
-    "yjs": "^13.6.27"
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
