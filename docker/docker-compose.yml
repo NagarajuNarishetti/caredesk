@@ -1,0 +1,148 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.6
+    container_name: caredesk-keycloak
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
+      KC_LOG_LEVEL: INFO
+    ports:
+      - "8080:8080"
+    volumes:
+      - caredesk_keycloak_data:/opt/keycloak/data
+    networks:
+      - caredesk_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e 'GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n' >&3;grep -q '200 OK' <&3"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  postgres:
+    image: postgres:15
+    container_name: caredesk-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: caredeskuser
+      POSTGRES_PASSWORD: caredeskpass
+      POSTGRES_DB: caredeskdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - caredesk_postgres_data:/var/lib/postgresql/data
+    networks:
+      - caredesk_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U caredeskuser -d caredeskdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mongodb:
+    image: mongo:6.0
+    container_name: caredesk-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: caredesk
+    volumes:
+      - caredesk_mongo_data:/data/db
+      - caredesk_mongo_config:/data/configdb
+    networks:
+      - caredesk_net
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: caredesk-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin123
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    depends_on:
+      - mongodb
+    networks:
+      - caredesk_net
+
+  minio:
+    image: minio/minio:latest
+    container_name: caredesk-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - caredesk_minio_data:/data
+    networks:
+      - caredesk_net
+    command: server /data --console-address ":9001"
+
+  minio-setup:
+    image: minio/mc:latest
+    container_name: caredesk-minio-setup
+    depends_on:
+      - minio
+    networks:
+      - caredesk_net
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb myminio/caredesk --ignore-existing;
+      /usr/bin/mc policy set public myminio/caredesk;
+      exit 0;
+      "
+
+  redis:
+    image: redis:7-alpine
+    container_name: caredesk-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - caredesk_redis_data:/data
+    networks:
+      - caredesk_net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: caredesk-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: caredesk
+      RABBITMQ_DEFAULT_PASS: caredesk
+    networks:
+      - caredesk_net
+
+volumes:
+  caredesk_keycloak_data:
+  caredesk_postgres_data:
+  caredesk_mongo_data:
+  caredesk_mongo_config:
+  caredesk_minio_data:
+  caredesk_redis_data:
+
+networks:
+  caredesk_net:
+    driver: bridge

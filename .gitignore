@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build outputs
+.next/
+client/.next/
+out/
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Env & secrets
+
+# Uploads and generated files
+server/uploads/
+
+# Database data (docker volumes persist separately)
+data/
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Coverage / test artifacts
+coverage/
+.nyc_output/
+
+# Misc
+*.local
+*.cache
+**/.eslintcache
+

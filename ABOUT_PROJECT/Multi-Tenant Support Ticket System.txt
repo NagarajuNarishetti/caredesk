@@ -1,0 +1,37 @@
+Multi-Tenant Support Ticket System
+1. Project Overview
+This project is about building a multi-tenant customer support portal where organizations can onboard their support teams and manage customer issues in one place.
+customers will log into the portal (per organization) and raise support tickets. Each ticket can include details of the problem, priority, and attachments (like screenshots).
+Tickets will be auto assigned to Support agents (you can use Round Robin algorithm or Least Active Assignment (LAA) Algorithm for agents auto assignment) , inside the organization will then pick up, respond, and resolve tickets, while Org Admins monitor and control the overall workflow.
+The system is role-based (via Keycloak), so the app changes dynamically based on who’s logged in:
+● Org Admins see configuration, reports, and all tickets.
+● Agents see only tickets assigned to them and their work queue.
+● Customers only see their submitted tickets, status, and history.
+2. Tools & Why We’re Using Them
+● Next.js → For building the front-end portal (customer ticket submission + agent/admin dashboards). Role-based rendering ensures only relevant components/pages show per user role.
+● Keycloak → Authentication + authorization with tenant-aware roles (Org Admin, Agent, Customer).
+● PostgreSQL → Stores tickets, users, organizations, and attachments metadata. Each tenant’s data is securely partitioned.
+● Redis → Tracks ticket queues and helps in quick lookups for available agents or ticket assignment.
+● RabbitMQ → Processes background jobs like sending ticket confirmation emails, generating ticket reports,
+● Ceph/MiniIO → Handles storage of attachments/screenshots customers upload with their tickets.
+3. Expectations (User Stories)
+Org Admins
+● As an org admin, I can onboard my organization and invite support agents.
+● As an org admin, I can see all tickets created by customers of my org.
+● As an org admin, I can configure escalation rules, priorities, and reporting.
+Support Agents
+● As a support agent, I can log in and view tickets assigned to me.
+● As a support agent, I can update ticket status, add comments, and upload solution files.
+● As a support agent, I can search previous tickets for context.
+Customers
+● As a customer, I can log in and raise a new ticket describing my issue.
+● As a customer, I can attach screenshots or documents when submitting a ticket.
+● As a customer, I can track the progress of my ticket (open, in-progress, resolved).
+● As a customer, I receive email notifications when the status of my ticket changes.
+System Behavior
+● When a ticket is submitted, the system queues it for assignment to an available agent.
+● Tickets get escalated or flagged if they remain unresolved for too long.
+4. Final Outcome
+By the end, we’ll have:
+✅ A multi-tenant support ticket portal where each organization can manage its own customers, agents, and issues. ✅ A role-based UI where admins, agents, and customers each see only what’s relevant to them. ✅ A ticket lifecycle management system (open → in-progress → resolved → closed) with notifications and escalation rules. ✅ Support for attachments, email notifications, and analytics. ✅ A scalable backend with queues and background jobs for performance and reliability.
+
