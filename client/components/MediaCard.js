@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import API from "../lib/api";
-import ShareModal from "./ShareModal";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -25,7 +24,7 @@ export default function MediaCard({
   const [editTitle, setEditTitle] = useState(item.title);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
-  const [shareModalOpen, setShareModalOpen] = useState(false);
+  
 
   const formatTimeAgo = (date) => {
     const now = new Date();
@@ -224,19 +223,7 @@ export default function MediaCard({
                   </svg>
                 </button>
               )}
-              <button
-                type="button"
-                aria-label="Add comment"
-                className="text-gray-600 hover:text-teal-600 transition"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShareModalOpen(true);
-                }}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </button>
+              
             </div>
           </div>
         </div>
@@ -387,14 +374,7 @@ export default function MediaCard({
         </div>
       )}
 
-      {/* Share Modal */}
-      {shareModalOpen && (
-        <ShareModal
-          mediaId={item.id}
-          currentUserId={currentUserId}
-          onClose={() => setShareModalOpen(false)}
-        />
-      )}
+      
     </>
   );
 }

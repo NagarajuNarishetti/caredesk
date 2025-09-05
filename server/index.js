@@ -4,9 +4,7 @@ const cors = require('cors');
 const session = require('express-session');
 require('dotenv').config();
 
-// MongoDB connection
-const connectMongoDB = require('./config/mongodb');
-connectMongoDB();
+// MongoDB removed
 
 // MinIO connection
 const { initMinio } = require('./config/minio');
@@ -14,20 +12,6 @@ initMinio();
 
 const pool = require('./config/db'); // PostgreSQL for user/media metadata
 const { initKeycloak, memoryStore } = require('./middleware/keycloak');
-
-// Yjs WebSocket setup
-let setupWSConnection;
-try {
-  setupWSConnection = require('y-websocket/bin/utils').setupWSConnection;
-} catch (error) {
-  console.error('Failed to load y-websocket utils:', error);
-  setupWSConnection = () => {
-    console.warn('Yjs WebSocket setup not available');
-  };
-}
-const WebSocket = require('ws');
-
-
 
 const app = express();
 const server = http.createServer(app);
@@ -38,47 +22,7 @@ const io = require('socket.io')(server, {
   }
 });
 
-// Create WebSocket server for Yjs on a different path
-const wss = new WebSocket.Server({
-  noServer: true,
-  perMessageDeflate: false,
-  clientTracking: true
-});
-
-// Handle Yjs WebSocket connections
-wss.on('connection', (conn, req) => {
-  try {
-    setupWSConnection(conn, req);
-  } catch (error) {
-    console.error('WebSocket connection error:', error);
-    conn.close();
-  }
-});
-
-// Handle WebSocket errors
-wss.on('error', (error) => {
-  console.error('WebSocket server error:', error);
-});
-
-// Handle WebSocket upgrade requests
-server.on('upgrade', (request, socket, head) => {
-  const pathname = request.url;
-
-  if (pathname.startsWith('/yjs')) {
-    // Handle Yjs WebSocket connections
-    try {
-      wss.handleUpgrade(request, socket, head, (ws) => {
-        wss.emit('connection', ws, request);
-      });
-    } catch (error) {
-      console.error('Yjs WebSocket upgrade error:', error);
-      socket.destroy();
-    }
-  } else {
-    // Let Socket.IO handle other WebSocket connections
-    // Don't destroy the socket, let Socket.IO handle it
-  }
-});
+// Yjs WebSocket removed
 
 // index.js
 app.set('io', io);
@@ -101,13 +45,11 @@ const mediaRoutes = require('./routes/media');
 const ticketsRoutes = require('./routes/tickets');
 const ticketCommentsRoutes = require('./routes/ticketComments');
 
-const mediaSharedRoutes = require('./routes/mediaShared');
 const orgInvitesRoutes = require('./routes/orgInvites');
 const organizationsRoutes = require('./routes/organizations');
 
 
 
-app.use('/media-shared', mediaSharedRoutes);
 app.use('/users', usersRoutes);
 app.use('/media', mediaRoutes);
 app.use('/tickets', ticketsRoutes);
@@ -160,7 +102,6 @@ app.get('/db-test', async (req, res) => {
     const result = await pool.query('SELECT NOW()');
     res.json({
       postgresql: result.rows[0],
-      mongodb: 'Connected ✅',
       socketio: 'Ready ✅'
     });
   } catch (err) {
