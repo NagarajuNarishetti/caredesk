@@ -14,15 +14,25 @@ Key links
 Project screenshots
 
 ![Client Overview](ABOUT_PROJECT/Images/CareDesk_clinet.png)
+Client dashboard showing tickets, navigation, and role‑aware UI.
 ![Server Overview](ABOUT_PROJECT/Images/CareDesk_Server.png)
+High‑level server components and dependencies used by the backend.
 ![Tickets List](ABOUT_PROJECT/Images/TicketsRisedByYouWIthAllDetails.png)
+List of tickets raised by the customer with ticket number, status, and metadata.
 ![Ticket Conversation](ABOUT_PROJECT/Images/CustomerCanChatWithAgentAboutTicketAndChekUpdatesHere.png)
+Ticket detail view where customers and agents exchange comments and track updates.
 ![Agent Actions](ABOUT_PROJECT/Images/AgentCanAddNoteAndCloseTheTicket.png)
+Agent panel to add internal notes for the customer and close a ticket.
 ![Invites](ABOUT_PROJECT/Images/YouCanAcceptAndRejectInvitatoinYouGotFromHere.png)
+Pending invitations page where users accept or reject organization invites.
 ![Org Invites](ABOUT_PROJECT/Images/InYourOrgYouCanInviteOtherUsersAsAgentOrCustomers.png)
+Organization view to invite users and assign them as Agents or Customers.
 ![Keycloak Roles](ABOUT_PROJECT/Images/ClientRoles.png)
+Keycloak role definitions used by the system (Org Admin, Agent, Customer).
 ![Role Mapping](ABOUT_PROJECT/Images/RoleMapingForUsers.png)
+Example of mapping roles to users in Keycloak for tenant‑aware access.
 ![MinIO Files](ABOUT_PROJECT/Images/FilesGetingStoredInMiniIo.png)
+MinIO console showing stored ticket attachments (S3‑compatible object storage).
 
 Core features
 - Multi‑tenant, role‑based UI (Org Admin, Agent, Customer)
