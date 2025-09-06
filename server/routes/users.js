@@ -321,9 +321,8 @@ router.post("/", async (req, res) => {
 
   try {
     console.log("Starting user registration:", { keycloak_id, username });
-    await pool.query("BEGIN");
 
-    // Create or update user
+    // Create or update user first (outside transaction to ensure it's committed)
     const userRes = await pool.query(
       `INSERT INTO users (keycloak_id, username, email, first_name, last_name, phone, avatar_url, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -334,6 +333,9 @@ router.post("/", async (req, res) => {
     );
     userId = userRes.rows[0].id;
     console.log("User created/updated:", { userId });
+
+    // Start transaction for organization operations
+    await pool.query("BEGIN");
 
     // Define and sanitize orgName
     const orgName = sanitizeOrgName(`org-of-${username}`);
@@ -469,30 +471,68 @@ router.post("/", async (req, res) => {
       // Continue to allow DB updates
     }
 
-    // Insert organization in PostgreSQL
-    const orgDbRes = await pool.query(
-      `INSERT INTO organizations (name, domain, keycloak_org_id, settings, status)
-       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-      [orgName, domain, kcOrgId, '{"sla_hours": 24, "auto_assign": true}', 'active']
-    );
+    // Insert organization in PostgreSQL (handle existing organizations)
+    let orgDbRes;
+    try {
+      orgDbRes = await pool.query(
+        `INSERT INTO organizations (name, domain, keycloak_org_id, settings, status)
+         VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+        [orgName, domain, kcOrgId, '{"sla_hours": 24, "auto_assign": true}', 'active']
+      );
+    } catch (insertError) {
+      // If organization already exists, get the existing one
+      if (insertError.code === '23505' && insertError.constraint === 'organizations_domain_key') {
+        console.log("Organization already exists, fetching existing organization:", { domain });
+        orgDbRes = await pool.query(
+          `SELECT id FROM organizations WHERE domain = $1`,
+          [domain]
+        );
+      } else {
+        throw insertError;
+      }
+    }
     const orgIdInDb = orgDbRes.rows[0].id;
     console.log("PostgreSQL organization created:", { orgId: orgIdInDb });
 
-    // Insert user as orgAdmin in organization_users
-    await pool.query(
-      `INSERT INTO organization_users (organization_id, user_id, role)
-       VALUES ($1, $2, $3)`,
-      [orgIdInDb, userId, "orgAdmin"]
+    // Check if user is already in an organization
+    const existingMembership = await pool.query(
+      `SELECT organization_id, role FROM organization_users WHERE user_id = $1`,
+      [userId]
     );
-    console.log("User added to organization_users:", {
-      userId,
-      orgId: orgIdInDb,
-    });
+
+    if (existingMembership.rows.length > 0) {
+      console.log("User already a member of organization:", {
+        userId,
+        existingOrgId: existingMembership.rows[0].organization_id,
+        role: existingMembership.rows[0].role
+      });
+      orgIdInDb = existingMembership.rows[0].organization_id;
+    } else {
+      // Insert user as orgAdmin in organization_users
+      try {
+        await pool.query(
+          `INSERT INTO organization_users (organization_id, user_id, role)
+           VALUES ($1, $2, $3)`,
+          [orgIdInDb, userId, "orgAdmin"]
+        );
+        console.log("User added to organization_users:", { userId, orgId: orgIdInDb });
+      } catch (membershipError) {
+        // If user is already a member, that's fine - just log it
+        if (membershipError.code === '23505') {
+          console.log("User already a member of organization:", { userId, orgId: orgIdInDb });
+        } else {
+          throw membershipError;
+        }
+      }
+    }
 
     await pool.query("COMMIT");
     console.log("Transaction committed for user:", { keycloak_id });
 
     res.status(201).json({
+      id: userId,
+      username: userRes.rows[0].username,
+      email: email,
       userId,
       organizationId: orgIdInDb,
       keycloakOrgId: kcOrgId || null,

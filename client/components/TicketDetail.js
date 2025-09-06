@@ -51,11 +51,20 @@ export default function TicketDetail({ ticket, viewerId, onClose, onUpdated }) {
         if (!replyText.trim()) return;
         setReplying(true);
         try {
-            const queryParam = ticket.assigned_agent_id ? `assignedTo=${ticket.assigned_agent_id}` : (viewerId ? `userId=${viewerId}` : '');
-            const postUrl = queryParam ? `/ticket-comments/ticket/${ticket.id}?${queryParam}` : `/ticket-comments/ticket/${ticket.id}`;
+            // For customer replies, always use the customer's ID from the ticket details
+            const customerId = details?.customer_id;
+            if (!customerId) {
+                console.error("No customer ID found for reply");
+                return;
+            }
+
+            const queryParam = `userId=${customerId}`;
+            const postUrl = `/ticket-comments/ticket/${ticket.id}?${queryParam}`;
             await API.post(postUrl, { content: replyText.trim(), is_internal: false });
             setReplyText("");
-            const getUrl = queryParam ? `/tickets/${ticket.id}?${queryParam}` : `/tickets/${ticket.id}`;
+
+            // Refresh the ticket details
+            const getUrl = `/tickets/${ticket.id}?${queryParam}`;
             const res = await API.get(getUrl);
             setDetails(res.data);
         } catch (e) {
@@ -243,7 +252,7 @@ export default function TicketDetail({ ticket, viewerId, onClose, onUpdated }) {
                         </div>
 
                         {/* Customer Reply Section */}
-                        {details?.customer_id && viewerId && details.customer_id === viewerId && (
+                        {details?.customer_id && details?.customer_id === viewerId && (
                             <div className="bg-white rounded-2xl border border-blue-200/50 shadow-2xl p-4">
                                 <h3 className="font-semibold text-gray-800 mb-2">Reply to Agent</h3>
                                 <textarea
