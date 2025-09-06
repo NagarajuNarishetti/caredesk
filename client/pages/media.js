@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../lib/api";
 import MediaCard from "../components/MediaCard";
-import MediaDetail from "../components/MediaDetail";
 import TicketDetail from "../components/TicketDetail";
 import InvitationsButton from "../components/InvitationsButton";
 import { useRouter } from "next/router";
@@ -17,7 +16,6 @@ export default function MediaPage({ keycloak }) {
   const [filterPriority, setFilterPriority] = useState("all");
   const [filterStatus, setFilterStatus] = useState("open"); // New: filter by status
   const [sortBy] = useState("newest");
-  const [isSelectedFromShared, setIsSelectedFromShared] = useState(false);
   const [sharedMedia, setSharedMedia] = useState([]);
   const [filterRole, setFilterRole] = useState("all");
   const [filterOrg, setFilterOrg] = useState("all");
@@ -646,8 +644,6 @@ export default function MediaPage({ keycloak }) {
                   item={item}
                   onClick={() => {
                     setSelected(item);
-                    // Use TicketDetail modal even for tickets raised by you
-                    setIsSelectedFromShared(true);
                   }}
                   currentUserId={currentUserId}
                   onEdit={null}
@@ -769,7 +765,6 @@ export default function MediaPage({ keycloak }) {
                   key={item.id}
                   onClick={() => {
                     setSelected(item);
-                    setIsSelectedFromShared(true);
                   }}
                   className="group cursor-pointer relative"
                 >
@@ -1103,24 +1098,13 @@ export default function MediaPage({ keycloak }) {
         </div>
       )}
 
-      {/* Ticket detail for assigned tickets; Media detail for legacy */}
-      {selected && isSelectedFromShared && (
+      {/* Ticket detail modal */}
+      {selected && (
         <TicketDetail
           ticket={selected}
           viewerId={currentUserId}
           onClose={() => setSelected(null)}
           onUpdated={() => fetchTickets(currentUserId)}
-        />
-      )}
-      {selected && !isSelectedFromShared && (
-        <MediaDetail
-          item={selected}
-          onClose={() => {
-            setSelected(null);
-          }}
-          currentUser={currentUser}
-          permissionLevel={null}
-          isSharedMedia={false}
         />
       )}
 
