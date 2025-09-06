@@ -5,6 +5,7 @@ import MediaDetail from "../components/MediaDetail";
 import TicketDetail from "../components/TicketDetail";
 import InvitationsButton from "../components/InvitationsButton";
 import { useRouter } from "next/router";
+import { PRIORITY_OPTIONS, getFileType, validateFile, handleTicketUpload, getPriorityDisplayName, formatTimeAgo } from "../utils/ticketUtils";
 
 export default function MediaPage({ keycloak }) {
   const [media, setMedia] = useState([]);
@@ -115,22 +116,30 @@ export default function MediaPage({ keycloak }) {
       sharedFilterStatus === "all" || item.status === sharedFilterStatus;
     const matchesOrg =
       filterOrg === "all" || item.organization_name === filterOrg;
-    return matchesStatus && matchesOrg;
+
+    // Also apply priority filter to shared media
+    let matchesPriority = filterPriority === "all";
+    if (!matchesPriority) {
+      // Check priority_level (number)
+      if (item.priority_level && String(item.priority_level) === String(filterPriority)) {
+        matchesPriority = true;
+      }
+      // Check priority (legacy field)
+      else if (item.priority && String(item.priority) === String(filterPriority)) {
+        matchesPriority = true;
+      }
+      // Check priority_name (string) - map to numbers
+      else if (item.priority_name) {
+        const priorityMap = { "Low": "1", "Medium": "2", "High": "3" };
+        if (priorityMap[item.priority_name] === String(filterPriority)) {
+          matchesPriority = true;
+        }
+      }
+    }
+
+    return matchesStatus && matchesOrg && matchesPriority;
   });
 
-  // Format time ago helper for shared media
-  const formatTimeAgo = (date) => {
-    const now = new Date();
-    const diff = now - new Date(date);
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return "just now";
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
-  };
 
   useEffect(() => {
     const fetchUserAndTickets = async () => {
@@ -239,47 +248,13 @@ export default function MediaPage({ keycloak }) {
     }
   };
 
-  // Auto-detect file type based on MIME type
-  const getFileType = (file) => {
-    if (file.type.startsWith("image/")) return "image";
-    if (file.type.startsWith("video/")) return "video";
-    if (file.type.startsWith("application/pdf")) return "document";
-    if (file.type === "text/plain") return "document";
-    if (file.type === "application/msword") return "document";
-    if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return "document";
-    if (file.type === "application/vnd.ms-excel") return "document";
-    if (file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") return "document";
-    if (file.type === "application/vnd.ms-powerpoint") return "document";
-    if (file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation") return "document";
-    if (file.type === "text/csv") return "document";
-    return "document"; // Default fallback for documents
-  };
-
-  // Handle file selection
+  // Handle file selection using shared utility
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
-      const isValidType =
-        file.type.startsWith("image/") ||
-        file.type.startsWith("video/") ||
-        file.type.startsWith("application/pdf") ||
-        file.type === "text/plain" ||
-        file.type === "application/msword" ||
-        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-        file.type === "application/vnd.ms-excel" ||
-        file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-        file.type === "application/vnd.ms-powerpoint" ||
-        file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
-        file.type === "text/csv";
-      if (!isValidType) {
-        setUploadMessage("❌ Please select an image, video, or document file (PDF, TXT, DOC, XLS, PPT, CSV)");
-        return;
-      }
-
-      // Check file size (50MB limit)
-      if (file.size > 50 * 1024 * 1024) {
-        setUploadMessage("❌ File size must be less than 50MB");
+      const error = validateFile(file);
+      if (error) {
+        setUploadMessage(error);
         return;
       }
 
@@ -292,7 +267,7 @@ export default function MediaPage({ keycloak }) {
     }
   };
 
-  // Handle upload
+  // Handle upload using shared utility
   const handleUpload = async (e) => {
     e.preventDefault();
 
@@ -307,53 +282,42 @@ export default function MediaPage({ keycloak }) {
     }
 
     setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", uploadFile);
-      formData.append("title", uploadTitle.trim());
-      if (uploadDescription && uploadDescription.trim()) {
-        formData.append("description", uploadDescription.trim());
+
+    await handleTicketUpload(
+      {
+        file: uploadFile,
+        title: uploadTitle,
+        description: uploadDescription,
+        priorityId: priorityId,
+        organizationId: selectedOrgId,
+        currentUserId: currentUserId
+      },
+      (message) => {
+        setUploadMessage("✅ " + message);
+
+        // Reset form
+        setUploadFile(null);
+        setUploadTitle("");
+
+        // Reset file input
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) fileInput.value = "";
+
+        // Refresh media list
+        refreshMedia();
+
+        // Auto-close modal after success
+        setTimeout(() => {
+          setShowUploadModal(false);
+          setUploadMessage("");
+        }, 2000);
+      },
+      (error) => {
+        setUploadMessage(error);
       }
-      formData.append("type", getFileType(uploadFile));
-      formData.append("uploaded_by", currentUserId);
-      if (selectedOrgId) {
-        formData.append("organization_id", selectedOrgId);
-      }
-      if (priorityId) {
-        console.log("🔍 Sending priority_id:", priorityId);
-        formData.append("priority_id", priorityId);
-      }
+    );
 
-      const response = await API.post("/media/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      setUploadMessage("✅ " + response.data.message);
-
-      // Reset form
-      setUploadFile(null);
-      setUploadTitle("");
-
-      // Reset file input
-      const fileInput = document.querySelector('input[type="file"]');
-      if (fileInput) fileInput.value = "";
-
-      // Refresh media list
-      await refreshMedia();
-
-      // Auto-close modal after success
-      setTimeout(() => {
-        setShowUploadModal(false);
-        setUploadMessage("");
-      }, 2000);
-    } catch (err) {
-      console.error("Upload error:", err.response?.data);
-      setUploadMessage(
-        "❌ Upload failed: " + (err.response?.data?.detail || err.message)
-      );
-    } finally {
-      setUploading(false);
-    }
+    setUploading(false);
   };
 
   // Close upload modal
@@ -446,8 +410,26 @@ export default function MediaPage({ keycloak }) {
   // Filter and sort media
   const filteredMedia = media
     .filter((item) => {
-      const matchesPriority =
-        filterPriority === "all" || String(item?.priority) === String(filterPriority);
+      // Check priority with multiple field formats
+      let matchesPriority = filterPriority === "all";
+      if (!matchesPriority) {
+        // Check priority_level (number)
+        if (item.priority_level && String(item.priority_level) === String(filterPriority)) {
+          matchesPriority = true;
+        }
+        // Check priority (legacy field)
+        else if (item.priority && String(item.priority) === String(filterPriority)) {
+          matchesPriority = true;
+        }
+        // Check priority_name (string) - map to numbers
+        else if (item.priority_name) {
+          const priorityMap = { "Low": "1", "Medium": "2", "High": "3" };
+          if (priorityMap[item.priority_name] === String(filterPriority)) {
+            matchesPriority = true;
+          }
+        }
+      }
+
       const matchesStatus =
         filterStatus === "all" || item?.status === filterStatus;
       return matchesPriority && matchesStatus;
@@ -578,9 +560,11 @@ export default function MediaPage({ keycloak }) {
                 className="px-3 py-2 bg-white/90 backdrop-blur-2xl rounded-xl border border-emerald-200/50 text-sm text-gray-700 shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-300"
               >
                 <option value="all">All Priorities</option>
-                <option value="1">High Priority</option>
-                <option value="2">Medium Priority</option>
-                <option value="3">Low Priority</option>
+                {PRIORITY_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label} Priority
+                  </option>
+                ))}
               </select>
               <select
                 value={filterStatus}
@@ -666,8 +650,8 @@ export default function MediaPage({ keycloak }) {
                     setIsSelectedFromShared(true);
                   }}
                   currentUserId={currentUserId}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
+                  onEdit={null}
+                  onDelete={null}
                 />
               ))}
             </div>
@@ -747,9 +731,11 @@ export default function MediaPage({ keycloak }) {
                     className="px-3 py-2 bg-white/80 backdrop-blur-2xl border border-emerald-200/50 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 focus:text-gray-800 hover:bg-white focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-600/30 transition-all duration-300"
                   >
                     <option value="all" className="bg-white text-gray-800">All Priorities</option>
-                    <option value="1" className="bg-white text-gray-800">High Priority</option>
-                    <option value="2" className="bg-white text-gray-800">Medium Priority</option>
-                    <option value="3" className="bg-white text-gray-800">Low Priority</option>
+                    {PRIORITY_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value} className="bg-white text-gray-800">
+                        {option.label} Priority
+                      </option>
+                    ))}
                   </select>
                 </div>
                 {/* Status Filter */}
@@ -1060,9 +1046,11 @@ export default function MediaPage({ keycloak }) {
                     onChange={(e) => setPriorityId(e.target.value)}
                     className="w-full px-4 py-4 bg-white border border-blue-200 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all text-lg"
                   >
-                    <option value="3">High</option>
-                    <option value="2">Medium</option>
-                    <option value="1">Low</option>
+                    {PRIORITY_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

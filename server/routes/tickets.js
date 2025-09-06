@@ -153,6 +153,66 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /categories - Get ticket categories for organization
+router.get('/categories', async (req, res) => {
+  try {
+    const user = req.kauth.grant.access_token.content;
+    const userKeycloakId = user.sub;
+
+    const userResult = await pool.query(`
+      SELECT ou.organization_id
+      FROM users u
+      JOIN organization_users ou ON u.id = ou.user_id
+      WHERE u.keycloak_id = $1
+    `, [userKeycloakId]);
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const result = await pool.query(`
+      SELECT * FROM ticket_categories 
+      WHERE organization_id = $1 AND is_active = true
+      ORDER BY name
+    `, [userResult.rows[0].organization_id]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching categories:', err);
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+// GET /priorities - Get ticket priorities for organization
+router.get('/priorities', async (req, res) => {
+  try {
+    const user = req.kauth.grant.access_token.content;
+    const userKeycloakId = user.sub;
+
+    const userResult = await pool.query(`
+      SELECT ou.organization_id
+      FROM users u
+      JOIN organization_users ou ON u.id = ou.user_id
+      WHERE u.keycloak_id = $1
+    `, [userKeycloakId]);
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const result = await pool.query(`
+      SELECT * FROM ticket_priorities 
+      WHERE organization_id = $1 AND is_active = true
+      ORDER BY level
+    `, [userResult.rows[0].organization_id]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching priorities:', err);
+    res.status(500).json({ error: 'Failed to fetch priorities' });
+  }
+});
+
 // GET /:ticketId - Get specific ticket details
 router.get('/:ticketId', async (req, res) => {
   try {
@@ -652,66 +712,6 @@ router.put('/:ticketId', async (req, res) => {
   } catch (err) {
     console.error('Error updating ticket:', err);
     res.status(500).json({ error: 'Failed to update ticket' });
-  }
-});
-
-// GET /categories - Get ticket categories for organization
-router.get('/categories', async (req, res) => {
-  try {
-    const user = req.kauth.grant.access_token.content;
-    const userKeycloakId = user.sub;
-
-    const userResult = await pool.query(`
-      SELECT ou.organization_id
-      FROM users u
-      JOIN organization_users ou ON u.id = ou.user_id
-      WHERE u.keycloak_id = $1
-    `, [userKeycloakId]);
-
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const result = await pool.query(`
-      SELECT * FROM ticket_categories 
-      WHERE organization_id = $1 AND is_active = true
-      ORDER BY name
-    `, [userResult.rows[0].organization_id]);
-
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error fetching categories:', err);
-    res.status(500).json({ error: 'Failed to fetch categories' });
-  }
-});
-
-// GET /priorities - Get ticket priorities for organization
-router.get('/priorities', async (req, res) => {
-  try {
-    const user = req.kauth.grant.access_token.content;
-    const userKeycloakId = user.sub;
-
-    const userResult = await pool.query(`
-      SELECT ou.organization_id
-      FROM users u
-      JOIN organization_users ou ON u.id = ou.user_id
-      WHERE u.keycloak_id = $1
-    `, [userKeycloakId]);
-
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const result = await pool.query(`
-      SELECT * FROM ticket_priorities 
-      WHERE organization_id = $1 AND is_active = true
-      ORDER BY level
-    `, [userResult.rows[0].organization_id]);
-
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error fetching priorities:', err);
-    res.status(500).json({ error: 'Failed to fetch priorities' });
   }
 });
 

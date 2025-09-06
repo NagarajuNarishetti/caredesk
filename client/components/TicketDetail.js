@@ -230,14 +230,28 @@ export default function TicketDetail({ ticket, viewerId, onClose, onUpdated }) {
                             )}
                         </div>
 
-                        {details?.assigned_agent_id === viewerId ? (
+                        {details?.assigned_agent_id === viewerId && details?.status !== 'closed' ? (
                             <div className="bg-white rounded-2xl border border-blue-200/50 shadow-2xl p-4">
                                 <h3 className="font-semibold text-gray-800 mb-2">Add note for the customer</h3>
                                 <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className="w-full border rounded-xl p-3 outline-none border-blue-200" placeholder="Type how you plan to resolve..." />
                                 <div className="flex gap-3 mt-3">
                                     <button disabled={!note.trim() || saving} onClick={handleAddNote} className="px-4 py-2 bg-blue-600 text-white rounded-xl disabled:opacity-50">{saving ? "Saving..." : "Save Note"}</button>
-                                    <button disabled={closing || details?.status === 'closed'} onClick={handleClose} className="px-4 py-2 bg-green-600 text-white rounded-xl disabled:opacity-50">{closing ? "Closing..." : "Close Ticket"}</button>
+                                    <button disabled={closing} onClick={handleClose} className="px-4 py-2 bg-green-600 text-white rounded-xl disabled:opacity-50">{closing ? "Closing..." : "Close Ticket"}</button>
                                 </div>
+                            </div>
+                        ) : details?.assigned_agent_id === viewerId && details?.status === 'closed' ? (
+                            <div className="bg-gray-100 rounded-2xl border border-gray-200 shadow-2xl p-4">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="font-semibold text-gray-800">Ticket Closed</h3>
+                                </div>
+                                <p className="text-gray-600 text-sm">
+                                    This ticket has been closed. No further actions can be taken on this ticket.
+                                </p>
                             </div>
                         ) : null}
 
@@ -251,8 +265,8 @@ export default function TicketDetail({ ticket, viewerId, onClose, onUpdated }) {
                             )) : <div className="text-gray-500 text-sm">No comments yet</div>}
                         </div>
 
-                        {/* Customer Reply Section */}
-                        {details?.customer_id && details?.customer_id === viewerId && (
+                        {/* Customer Reply Section - Only show if ticket is not closed */}
+                        {details?.customer_id && details?.customer_id === viewerId && details?.status !== 'closed' && (
                             <div className="bg-white rounded-2xl border border-blue-200/50 shadow-2xl p-4">
                                 <h3 className="font-semibold text-gray-800 mb-2">Reply to Agent</h3>
                                 <textarea
@@ -271,6 +285,24 @@ export default function TicketDetail({ ticket, viewerId, onClose, onUpdated }) {
                                         {replying ? "Sending..." : "Send Reply"}
                                     </button>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Closed Ticket Message */}
+                        {details?.customer_id && details?.customer_id === viewerId && details?.status === 'closed' && (
+                            <div className="bg-gray-100 rounded-2xl border border-gray-200 shadow-2xl p-4">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="font-semibold text-gray-800">Communication Closed</h3>
+                                </div>
+                                <p className="text-gray-600 text-sm">
+                                    This ticket has been closed. Communication is no longer available.
+                                    If you need further assistance, please create a new ticket.
+                                </p>
                             </div>
                         )}
                     </div>

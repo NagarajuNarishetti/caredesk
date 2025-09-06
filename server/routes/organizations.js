@@ -7,7 +7,7 @@ const { getRedis } = require('../config/redis');
 // GET /organizations/user/:userId - Get all organizations user is part of
 router.get('/user/:userId', async (req, res) => {
   const { userId } = req.params;
-  
+
   if (!isUuid(userId)) {
     return res.status(400).json({ error: 'Invalid user ID' });
   }
@@ -35,16 +35,49 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
+// GET /organizations/:orgId - Get organization details by ID
+router.get('/:orgId', async (req, res) => {
+  const { orgId } = req.params;
+
+  if (!isUuid(orgId)) {
+    return res.status(400).json({ error: 'Invalid organization ID' });
+  }
+
+  try {
+    const result = await pool.query(`
+      SELECT 
+        o.id,
+        o.name,
+        o.keycloak_org_id,
+        o.created_at,
+        o.settings,
+        (SELECT COUNT(*) FROM organization_users WHERE organization_id = o.id) as member_count,
+        (SELECT u.username FROM organization_users ou JOIN users u ON ou.user_id = u.id WHERE ou.organization_id = o.id AND ou.role = 'orgAdmin' LIMIT 1) as owner_username
+      FROM organizations o
+      WHERE o.id = $1
+    `, [orgId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error fetching organization:', err);
+    res.status(500).json({ error: 'Failed to fetch organization' });
+  }
+});
+
 // GET /organizations/:orgId/members - Get all members of an organization
 router.get('/:orgId/members', async (req, res) => {
-    const { orgId } = req.params;
-    
-    if (!isUuid(orgId)) {
-      return res.status(400).json({ error: 'Invalid organization ID' });
-    }
-  
-    try {
-      const result = await pool.query(`
+  const { orgId } = req.params;
+
+  if (!isUuid(orgId)) {
+    return res.status(400).json({ error: 'Invalid organization ID' });
+  }
+
+  try {
+    const result = await pool.query(`
         SELECT 
           u.id,
           u.username,
@@ -57,14 +90,14 @@ router.get('/:orgId/members', async (req, res) => {
         WHERE ou.organization_id = $1
         ORDER BY ou.role = 'orgAdmin' DESC, ou.joined_at ASC
       `, [orgId]);
-  
-      res.json(result.rows);
-    } catch (err) {
-      console.error('Error fetching organization members:', err);
-      res.status(500).json({ error: 'Failed to fetch organization members' });
-    }
-  });
-  
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching organization members:', err);
+    res.status(500).json({ error: 'Failed to fetch organization members' });
+  }
+});
+
 // PUT /organizations/:orgId/assignment - update assignment settings and (optionally) rebuild RR queue
 router.put('/:orgId/assignment', async (req, res) => {
   const { orgId } = req.params;

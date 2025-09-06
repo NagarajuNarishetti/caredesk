@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import API from "../lib/api";
 
 export default function OrganizationsPage({ keycloak }) {
+  const router = useRouter();
   const [organizations, setOrganizations] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -100,6 +102,11 @@ export default function OrganizationsPage({ keycloak }) {
     setShowModal(false);
     setSelectedOrg(null);
     setOrgMembers([]);
+  };
+
+  // Handle switch to organization
+  const handleSwitchToOrg = (org) => {
+    router.push(`/organization/${org.id}?role=${org.role}`);
   };
 
   // Format date helper
@@ -225,7 +232,10 @@ export default function OrganizationsPage({ keycloak }) {
                           </div>
                         )}
                       </div>
-                      <button onClick={() => handleViewDetails(org)} className="w-full px-5 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-700 transition-colors shadow">Open Overview</button>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleViewDetails(org)} className="flex-1 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-700 transition-colors shadow">Open Overview</button>
+                        {/* Org Admins don't need Switch button - they're already managing */}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -266,7 +276,10 @@ export default function OrganizationsPage({ keycloak }) {
                           </div>
                         )}
                       </div>
-                      <button onClick={() => handleViewDetails(org)} className="w-full px-5 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-700 transition-colors shadow">Open Overview</button>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleViewDetails(org)} className="flex-1 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-700 transition-colors shadow">Open Overview</button>
+                        <button onClick={() => handleSwitchToOrg(org)} className="flex-1 px-4 py-2 rounded-xl text-sm font-semibold text-blue-600 bg-white border-2 border-blue-600 hover:bg-blue-50 transition-colors shadow">Switch</button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -307,7 +320,10 @@ export default function OrganizationsPage({ keycloak }) {
                           </div>
                         )}
                       </div>
-                      <button onClick={() => handleViewDetails(org)} className="w-full px-5 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-700 transition-colors shadow">Open Overview</button>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleViewDetails(org)} className="flex-1 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-700 transition-colors shadow">Open Overview</button>
+                        <button onClick={() => handleSwitchToOrg(org)} className="flex-1 px-4 py-2 rounded-xl text-sm font-semibold text-blue-600 bg-white border-2 border-blue-600 hover:bg-blue-50 transition-colors shadow">Switch</button>
+                      </div>
                     </div>
                   ))}
                 </div>
