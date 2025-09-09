@@ -405,6 +405,19 @@ export default function MediaPage({ keycloak }) {
     setInviteMessage("");
   };
 
+  // Listen for navbar event to open invite modal
+  useEffect(() => {
+    const handler = () => setShowInviteModal(true);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('openInviteModal', handler);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('openInviteModal', handler);
+      }
+    };
+  }, []);
+
   // Filter and sort media
   const filteredMedia = media
     .filter((item) => {
@@ -484,7 +497,7 @@ export default function MediaPage({ keycloak }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
       {/* Header Section */}
-      <div className="pt-12 px-8 pb-4">
+      <div className="pt-8 px-4 sm:px-6 lg:px-8 pb-4">
         <div className="max-w-7xl mx-auto">
           {/* Royal Welcome Area */}
           <div className="mb-12">
@@ -497,25 +510,7 @@ export default function MediaPage({ keycloak }) {
                   <h1 className="text-3xl font-bold text-gray-800 mb-1 tracking-wide">
                     Welcome {keycloak.tokenParsed?.preferred_username}
                   </h1>
-                  <button
-                    onClick={() => router.push('/organizations')}
-                    className="px-4 py-2 bg-white/80 backdrop-blur-md text-slate-700 rounded-xl hover:bg-white hover:shadow-lg transition-all font-semibold shadow-xl flex items-center gap-2 group border border-emerald-200/60 hover:border-emerald-300 tracking-wide"
-                  >
-                    <svg className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    Organizations
-                  </button>
-                  <button
-                    onClick={() => setShowInviteModal(true)}
-                    className="px-4 py-2 bg-purple-100/80 backdrop-blur-md text-purple-700 rounded-xl hover:bg-purple-200 hover:shadow-lg transition-all font-semibold shadow-xl flex items-center gap-2 group border border-purple-200/50 hover:border-purple-300 tracking-wide"
-                  >
-                    <svg className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                    </svg>
-                    Invite to Org
-                  </button>
-                  <InvitationsButton keycloak={keycloak} />
+                  {/* Buttons moved to navbar */}
                 </div>
               </div>
 
@@ -546,8 +541,8 @@ export default function MediaPage({ keycloak }) {
       <div className="px-8 pb-12">
         <div className="max-w-7xl mx-auto">
           {/* Persistent Header with Filters */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-6">
+          <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+            <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
               <h2 className="text-2xl font-bold text-gray-800 tracking-wide">
                 TICKETS RAISED BY YOU
               </h2>
@@ -555,7 +550,7 @@ export default function MediaPage({ keycloak }) {
               <select
                 value={filterPriority}
                 onChange={(e) => setFilterPriority(e.target.value)}
-                className="px-3 py-2 bg-white/90 backdrop-blur-2xl rounded-xl border border-emerald-200/50 text-sm text-gray-700 shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                className="px-3 py-2 bg-white/90 backdrop-blur-2xl rounded-xl border border-emerald-200/50 text-sm text-gray-700 shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-300 w-full sm:w-auto"
               >
                 <option value="all">All Priorities</option>
                 {PRIORITY_OPTIONS.map(option => (
@@ -567,13 +562,13 @@ export default function MediaPage({ keycloak }) {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 bg-white/90 backdrop-blur-2xl rounded-xl border border-emerald-200/50 text-sm text-gray-700 shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                className="px-3 py-2 bg-white/90 backdrop-blur-2xl rounded-xl border border-emerald-200/50 text-sm text-gray-700 shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-300 w-full sm:w-auto"
               >
                 <option value="open">Open Tickets</option>
                 <option value="closed">Closed Tickets</option>
                 <option value="all">All Tickets</option>
               </select>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
                 <div className="flex items-center gap-2 px-3 py-2 bg-emerald-100/80 backdrop-blur-3xl rounded-xl border border-emerald-200 shadow-xl">
                   <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
@@ -660,23 +655,23 @@ export default function MediaPage({ keycloak }) {
         <div className="max-w-7xl mx-auto">
 
           {/* Shared Media Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold text-gray-800 tracking-wide">
+          <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-wide">
                 TICKETS ASSIGNED TO YOU
               </h2>
-              <span className="px-4 py-2 bg-blue-100/80 backdrop-blur-3xl rounded-xl text-blue-700 text-sm border border-blue-200 font-semibold tracking-wider shadow-xl">
+              <span className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-100/80 backdrop-blur-3xl rounded-xl text-blue-700 text-xs sm:text-sm border border-blue-200 font-semibold tracking-wider shadow-xl">
                 {filteredSharedMedia.length} ITEM
                 {filteredSharedMedia.length !== 1 ? "S" : ""}
               </span>
             </div>
 
             {/* Shared Media Controls */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full md:w-auto justify-start md:justify-end">
               {/* Refresh Button */}
               <button
                 onClick={refreshSharedMedia}
-                className="px-4 py-2 bg-white/80 backdrop-blur-2xl border border-blue-200/50 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 hover:bg-white transition-all duration-300 flex items-center gap-2 shadow-lg"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/80 backdrop-blur-2xl border border-blue-200/50 rounded-xl text-xs sm:text-sm font-medium text-gray-700 hover:text-gray-800 hover:bg-white transition-all duration-300 flex items-center gap-2 shadow-lg"
               >
                 <svg
                   className="w-4 h-4"
@@ -695,14 +690,14 @@ export default function MediaPage({ keycloak }) {
               </button>
 
               {/* Shared Media Filters */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full md:w-auto">
                 {/* Organization Filter */}
                 {sharedOrganizations.length > 0 && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
                     <select
                       value={filterOrg}
                       onChange={(e) => setFilterOrg(e.target.value)}
-                      className="px-3 py-2 bg-white/80 backdrop-blur-2xl border border-blue-200/50 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 focus:text-gray-800 hover:bg-white focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-600/30 transition-all duration-300"
+                      className="px-3 py-2 bg-white/80 backdrop-blur-2xl border border-blue-200/50 rounded-xl text-xs sm:text-sm font-medium text-gray-700 hover:text-gray-800 focus:text-gray-800 hover:bg-white focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-600/30 transition-all duration-300 w-full sm:w-auto"
                     >
                       <option value="all" className="bg-white text-gray-800">
                         All Organizations
@@ -720,11 +715,11 @@ export default function MediaPage({ keycloak }) {
                   </div>
                 )}
                 {/* Priority Filter (client-side only if available) */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <select
                     value={filterPriority}
                     onChange={(e) => setFilterPriority(e.target.value)}
-                    className="px-3 py-2 bg-white/80 backdrop-blur-2xl border border-emerald-200/50 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 focus:text-gray-800 hover:bg-white focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-600/30 transition-all duration-300"
+                    className="px-3 py-2 bg-white/80 backdrop-blur-2xl border border-emerald-200/50 rounded-xl text-xs sm:text-sm font-medium text-gray-700 hover:text-gray-800 focus:text-gray-800 hover:bg-white focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-600/30 transition-all duration-300 w-full sm:w-auto"
                   >
                     <option value="all" className="bg-white text-gray-800">All Priorities</option>
                     {PRIORITY_OPTIONS.map(option => (
@@ -735,11 +730,11 @@ export default function MediaPage({ keycloak }) {
                   </select>
                 </div>
                 {/* Status Filter */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <select
                     value={sharedFilterStatus}
                     onChange={(e) => setSharedFilterStatus(e.target.value)}
-                    className="px-3 py-2 bg-white/80 backdrop-blur-2xl border border-blue-200/50 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 focus:text-gray-800 hover:bg-white focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-600/30 transition-all duration-300"
+                    className="px-3 py-2 bg-white/80 backdrop-blur-2xl border border-blue-200/50 rounded-xl text-xs sm:text-sm font-medium text-gray-700 hover:text-gray-800 focus:text-gray-800 hover:bg-white focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-600/30 transition-all duration-300 w-full sm:w-auto"
                   >
                     <option value="open" className="bg-white text-gray-800">Open Tickets</option>
                     <option value="closed" className="bg-white text-gray-800">Closed Tickets</option>

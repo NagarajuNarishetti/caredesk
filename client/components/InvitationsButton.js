@@ -54,13 +54,22 @@ export default function InvitationsButton({ keycloak }) {
 
   if (!keycloak?.authenticated) return null;
 
+  const displayRole = (role) => {
+    if (!role) return "";
+    const lower = String(role).toLowerCase();
+    if (lower === "orgadmin" || lower === "owner") return "OrgAdmin";
+    if (lower === "agent" || lower === "reviewer") return "Agent";
+    if (lower === "customer" || lower === "viewer") return "Customer";
+    return role;
+  };
+
   return (
     <div className="relative">
       <button
         onClick={() => setShowInvites(!showInvites)}
-        className="px-4 py-2 bg-white/80 backdrop-blur-md text-gray-700 rounded-xl hover:bg-white hover:shadow-lg transition-all font-semibold shadow-xl flex items-center gap-2 group border border-blue-200/50 hover:border-blue-300 tracking-wide"
-        aria-label="Open Invitations"
-        title="Invitations for you"
+        className="px-3 py-2 bg-white/80 backdrop-blur-md text-gray-700 rounded-xl hover:bg-white hover:shadow-lg transition-all font-semibold shadow-xl flex items-center gap-2 group border border-blue-200/50 hover:border-blue-300 tracking-wide"
+        aria-label="Notifications"
+        title="Notifications"
       >
         <span className="relative inline-flex items-center">
           <svg className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
@@ -72,11 +81,10 @@ export default function InvitationsButton({ keycloak }) {
             </span>
           )}
         </span>
-        Invitations
       </button>
 
       {showInvites && (
-        <div className="absolute left-0 top-full mt-2 w-96 bg-white backdrop-blur-2xl rounded-2xl shadow-xl border border-blue-200/30 z-[9999] overflow-hidden transition-all duration-300">
+        <div className="absolute left-0 top-full mt-2 w-[22rem] sm:w-96 max-w-[90vw] bg-white backdrop-blur-2xl rounded-2xl shadow-xl border border-blue-200/30 z-[9999] overflow-hidden transition-all duration-300">
           <div className="p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-semibold text-gray-800 tracking-wide">Organization Invites</h3>
@@ -100,6 +108,7 @@ export default function InvitationsButton({ keycloak }) {
                           <span className="font-medium text-gray-800">{invite.invited_by_username}</span> invited you to join
                         </p>
                         <p className="text-base font-semibold text-blue-600 mt-1">{invite.organization_name}</p>
+                        <p className="text-xs text-gray-500 mt-1">Role: <span className="font-semibold">{displayRole(invite.role || invite.invited_role)}</span></p>
                         {invite.message && (
                           <p className="text-sm text-gray-500 italic mt-2 border-l-2 border-blue-300 pl-3">{invite.message}</p>
                         )}

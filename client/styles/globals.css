@@ -13,8 +13,9 @@ body {
 
 html,
 body {
-  background: linear-gradient(160deg, #ecfeff 0%, #f0fdf4 100%);
-  color: #0f172a;
+  /* Updated theme background and base text color */
+  background: #f2f2f2;
+  color: #0e2a32;
 }
 
 html,
@@ -32,17 +33,17 @@ body,
 }
 
 ::-webkit-scrollbar-track {
-  background: #E5EDF1;
+  background: #c8d8e4;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #96C2DB;
+  background: #2b6777;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #7BA8C7;
+  background: #22505c;
 }
 
 /* Custom animations */
@@ -64,15 +65,15 @@ body,
 
 /* Glass morphism effects */
 .glass {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(150, 194, 219, 0.3);
+  border: 1px solid rgba(200, 216, 228, 0.5);
 }
 
 .glass-dark {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(150, 194, 219, 0.5);
+  border: 1px solid rgba(43, 103, 119, 0.2);
 }
 
 /* TipTap Editor Styles */
@@ -183,4 +184,129 @@ body,
   white-space: nowrap;
   pointer-events: none;
   z-index: 20;
+}
+
+/* ================= Brand utility overrides (non-intrusive) ================= */
+/* Primary: #2b6777, Secondary: #52ab98, Muted: #c8d8e4 */
+/* Blue utilities → Primary */
+.text-blue-600,
+.text-blue-500,
+.text-blue-700 {
+  color: #2b6777 !important;
+}
+
+.bg-blue-600,
+.bg-blue-500,
+.bg-blue-400 {
+  background-color: #2b6777 !important;
+}
+
+.border-blue-200,
+.border-blue-300,
+.border-blue-400 {
+  border-color: #c8d8e4 !important;
+}
+
+.bg-blue-50,
+.bg-blue-100,
+.bg-blue-200 {
+  background-color: #c8d8e4 !important;
+}
+
+/* Emerald/Teal/Green utilities → Secondary */
+.text-emerald-600,
+.text-emerald-700,
+.text-teal-700,
+.text-green-700 {
+  color: #52ab98 !important;
+}
+
+.bg-emerald-500,
+.bg-emerald-400,
+.bg-teal-500,
+.bg-green-500 {
+  background-color: #52ab98 !important;
+}
+
+.bg-emerald-100,
+.bg-emerald-50,
+.bg-teal-100,
+.bg-green-100 {
+  background-color: #d3efe9 !important;
+}
+
+.border-emerald-200,
+.border-emerald-300,
+.border-teal-200,
+.border-green-200 {
+  border-color: #b8e3d9 !important;
+}
+
+/* Purple soft accents → Secondary tint for harmony */
+.bg-purple-100\/80 {
+  background-color: rgba(82, 171, 152, 0.2) !important;
+}
+
+.text-purple-700 {
+  color: #52ab98 !important;
+}
+
+.border-purple-200\/50,
+.border-purple-300,
+.border-purple-400 {
+  border-color: rgba(82, 171, 152, 0.35) !important;
+}
+
+/* Gradients mapped to brand colors */
+.from-blue-500 {
+  --tw-gradient-from: #2b6777 !important;
+}
+
+.to-blue-600 {
+  --tw-gradient-to: #1f4d59 !important;
+}
+
+.from-emerald-500 {
+  --tw-gradient-from: #52ab98 !important;
+}
+
+.to-teal-500 {
+  --tw-gradient-to: #3d907f !important;
+}
+
+.from-blue-500.to-blue-600 {
+  --tw-gradient-from: #2b6777 !important;
+  --tw-gradient-to: #1f4d59 !important;
+}
+
+.from-emerald-500.to-teal-500 {
+  --tw-gradient-from: #52ab98 !important;
+  --tw-gradient-to: #3d907f !important;
+}
+
+/* Light content cards using gray-50 → muted */
+.bg-gray-50 {
+  background-color: #eef5f9 !important;
+}
+
+.border-gray-200 {
+  border-color: #e2e9ee !important;
+}
+
+/* Brand headings tint */
+.text-slate-800 {
+  color: #264a52 !important;
+}
+
+.bg-slate-800 {
+  background-color: #2b3e44 !important;
+}
+
+.hover\:bg-slate-900:hover {
+  background-color: #24363b !important;
+}
+
+/* Small badges */
+.bg-red-500 {
+  background-color: #e35c5c !important;
 }
